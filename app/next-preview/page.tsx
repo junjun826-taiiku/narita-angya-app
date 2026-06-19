@@ -1,5 +1,5 @@
-import NextPreviewHome from './pagee'
+import Pagee from './pagee'
 
 export default function Page() {
-  return <NextPreviewHome />
+  return <Pagee />
 }
