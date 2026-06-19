@@ -73,7 +73,7 @@ const itinerary = [
 
 type LatestRecord = {
   checkpoint_id: string
-  checkpoint_name?: string | null
+  checkpoint_name: string | null
   actual_time: string | null
   status: string | null
   memo: string | null
@@ -112,11 +112,10 @@ export default function Pagee() {
       setMessage('')
 
       const { data, error } = await supabase
-        .from('checkpoint_records')
+        .from('checkpoint_latest')
         .select(
           'checkpoint_id, checkpoint_name, actual_time, status, memo, updated_by, updated_at'
         )
-        .order('updated_at', { ascending: false })
 
       if (error) {
         setMessage(`読込エラー: ${error.message}`)
@@ -127,9 +126,7 @@ export default function Pagee() {
       const map: Record<string, LatestRecord> = {}
 
       for (const row of data ?? []) {
-        if (!map[row.checkpoint_id]) {
-          map[row.checkpoint_id] = row
-        }
+        map[row.checkpoint_id] = row
       }
 
       setLatestMap(map)
@@ -195,7 +192,7 @@ export default function Pagee() {
               lineHeight: 1.7,
             }}
           >
-            チェックポイントごとの最新保存データを反映した行程表です。
+            `checkpoint_latest` の最新保存データを反映した行程表です。
           </p>
 
           <div
@@ -233,6 +230,21 @@ export default function Pagee() {
               }}
             >
               チェックポイント一覧へ
+            </Link>
+
+            <Link
+              href="/next-preview/history"
+              style={{
+                display: 'inline-block',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                background: '#7c3aed',
+                color: '#ffffff',
+                textDecoration: 'none',
+                fontWeight: 700,
+              }}
+            >
+              履歴へ
             </Link>
 
             <Link
@@ -282,14 +294,14 @@ export default function Pagee() {
             }}
           >
             <li>行脚全体を時系列で見やすく確認する</li>
-            <li>保存済みの実績時刻・状態を一目で把握する</li>
-            <li>後で全班表示や遅れ計算を追加する土台にする</li>
+            <li>各地点の最新状態を一目で把握する</li>
+            <li>後で遅れ計算や班別表示を足す土台にする</li>
           </ul>
         </section>
 
         {loading ? (
           <p style={{ margin: '0 0 16px 0', color: '#cbd5e1' }}>
-            保存済みデータを読み込み中です...
+            最新データを読み込み中です...
           </p>
         ) : null}
 
@@ -435,4 +447,5 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
 
