@@ -109,7 +109,21 @@ export default function Pagee() {
              >
           Next.js版チェックポイント一覧へ
           </Link>
-         </div>
+          <Link
+  href="/next-preview/itinerary"
+  style={{
+    display: 'inline-block',
+    padding: '12px 18px',
+    borderRadius: '12px',
+    background: '#0f766e',
+    color: '#ffffff',
+    textDecoration: 'none',
+    fontWeight: 700,
+  }}
+>
+  Next.js版行程表へ
+</Link>
+        </div>
         </section>
 
         <section
