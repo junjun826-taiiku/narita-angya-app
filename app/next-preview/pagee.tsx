@@ -2,15 +2,28 @@
 
 import Link from 'next/link'
 
-const checkpoints = [
-  { id: 1, name: '津田沼キャンパス出発' },
-  { id: 2, name: '歩道橋下' },
-  { id: 3, name: '富士そば前' },
-  { id: 4, name: '第1休憩所出発' },
-  { id: 5, name: 'ベイシア佐倉店前' },
-  { id: 6, name: '第2休憩所到着' },
-  { id: 7, name: 'Sun Lucky周辺' },
-  { id: 8, name: '京成成田駅東口ロータリー周辺' },
+const sections = [
+  {
+    title: 'チェックポイント一覧',
+    description: '各チェックポイントを一覧で確認し、詳細ページへ進むための画面です。',
+    href: '/next-preview/checkpoints',
+    color: '#2563eb',
+    buttonLabel: 'チェックポイント一覧へ',
+  },
+  {
+    title: '行程表',
+    description: '出発から到着までの流れを時系列で確認するための画面です。',
+    href: '/next-preview/itinerary',
+    color: '#0f766e',
+    buttonLabel: '行程表へ',
+  },
+  {
+    title: '履歴',
+    description: '誰がいつ何を更新したかを確認するための画面です。',
+    href: '/next-preview/history',
+    color: '#7c3aed',
+    buttonLabel: '履歴へ',
+  },
 ]
 
 export default function Pagee() {
@@ -70,7 +83,7 @@ export default function Pagee() {
               lineHeight: 1.7,
             }}
           >
-            今の公開版を壊さずに、画面を1つずつ Next.js 化していくための確認用ページです。
+            今の公開版を壊さずに、画面を1つずつ Next.js 化していくための確認用トップページです。
           </p>
 
           <div
@@ -96,49 +109,20 @@ export default function Pagee() {
             </Link>
 
             <Link
-             href="/next-preview/checkpoints"
-             style={{
-             display: 'inline-block',
-             padding: '12px 18px',
-             borderRadius: '12px',
-             background: '#2563eb',
-             color: '#ffffff',
-             textDecoration: 'none',
-             fontWeight: 700,
-            }}
-             >
-          Next.js版チェックポイント一覧へ
-          </Link>
-          <Link
-  href="/next-preview/itinerary"
-  style={{
-    display: 'inline-block',
-    padding: '12px 18px',
-    borderRadius: '12px',
-    background: '#0f766e',
-    color: '#ffffff',
-    textDecoration: 'none',
-    fontWeight: 700,
-  }}
->
-  Next.js版行程表へ
-</Link>
-<Link
-  href="/next-preview/history"
-  style={{
-    display: 'inline-block',
-    padding: '12px 18px',
-    borderRadius: '12px',
-    background: '#7c3aed',
-    color: '#ffffff',
-    textDecoration: 'none',
-    fontWeight: 700,
-  }}
->
-  Next.js版履歴へ
-</Link>
-
-        </div>
+              href="/next-preview/checkpoints"
+              style={{
+                display: 'inline-block',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                background: '#2563eb',
+                color: '#ffffff',
+                textDecoration: 'none',
+                fontWeight: 700,
+              }}
+            >
+              まずはチェックポイント一覧へ
+            </Link>
+          </div>
         </section>
 
         <section
@@ -155,7 +139,7 @@ export default function Pagee() {
             style={{
               margin: '0 0 16px 0',
               fontSize: '24px',
-              fontWeight: 700,
+              fontWeight: 800,
             }}
           >
             このページで確認すること
@@ -170,87 +154,104 @@ export default function Pagee() {
               fontSize: '16px',
             }}
           >
-            <li>Next.js 側の新しい画面が公開URLで見えるか</li>
+            <li>Next.js 側の各画面が公開URLで見えるか</li>
             <li>今の HTML 版を壊さずに共存できるか</li>
-            <li>今後の画面分割の土台になるか</li>
+            <li>今後の Supabase 連携前の画面分割の土台になるか</li>
           </ul>
         </section>
 
         <section
-          id="checkpoint-list"
           style={{
-            background: '#111827',
-            border: '1px solid #1f2937',
-            borderRadius: '20px',
-            padding: '24px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            scrollMarginTop: '24px',
+            display: 'grid',
+            gap: '16px',
           }}
         >
-          <h2
-            style={{
-              margin: '0 0 20px 0',
-              fontSize: '28px',
-              fontWeight: 800,
-            }}
-          >
-            チェックポイント一覧（仮）
-          </h2>
-
-          <div
-            style={{
-              display: 'grid',
-              gap: '16px',
-            }}
-          >
-            {checkpoints.map((checkpoint) => (
+          {sections.map((section) => (
+            <div
+              key={section.href}
+              style={{
+                background: '#111827',
+                border: '1px solid #1f2937',
+                borderRadius: '20px',
+                padding: '24px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+              }}
+            >
               <div
-                key={checkpoint.id}
                 style={{
-                  background: '#1e293b',
-                  border: '1px solid #334155',
-                  borderRadius: '18px',
-                  padding: '20px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: '16px',
+                  flexWrap: 'wrap',
+                  marginBottom: '14px',
                 }}
               >
-                <p
-                  style={{
-                    margin: '0 0 10px 0',
-                    fontSize: '13px',
-                    color: '#94a3b8',
-                  }}
-                >
-                  チェックポイント {checkpoint.id}
-                </p>
+                <div>
+                  <p
+                    style={{
+                      margin: '0 0 8px 0',
+                      fontSize: '13px',
+                      color: '#94a3b8',
+                    }}
+                  >
+                    Next.js化済み導線
+                  </p>
 
-                <h3
-                  style={{
-                    margin: '0 0 14px 0',
-                    fontSize: '28px',
-                    fontWeight: 800,
-                    color: '#f8fafc',
-                  }}
-                >
-                  {checkpoint.name}
-                </h3>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: '28px',
+                      fontWeight: 800,
+                      color: '#f8fafc',
+                    }}
+                  >
+                    {section.title}
+                  </h3>
+                </div>
 
-                <button
-                  type="button"
+                <span
                   style={{
-                    border: 'none',
-                    background: '#334155',
+                    display: 'inline-block',
+                    background: section.color,
                     color: '#ffffff',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
+                    padding: '6px 10px',
+                    borderRadius: '999px',
+                    fontSize: '12px',
                     fontWeight: 700,
-                    cursor: 'pointer',
                   }}
                 >
-                  詳細ページは次ステップで作成
-                </button>
+                  Preview
+                </span>
               </div>
-            ))}
-          </div>
+
+              <p
+                style={{
+                  margin: '0 0 18px 0',
+                  color: '#cbd5e1',
+                  lineHeight: 1.8,
+                  fontSize: '16px',
+                }}
+              >
+                {section.description}
+              </p>
+
+              <Link
+                href={section.href}
+                style={{
+                  display: 'inline-block',
+                  background: section.color,
+                  color: '#ffffff',
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                {section.buttonLabel}
+              </Link>
+            </div>
+          ))}
         </section>
       </div>
     </main>
