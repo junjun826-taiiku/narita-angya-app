@@ -2,58 +2,92 @@
 
 import Link from 'next/link'
 
-export default function NextPreviewHome() {
-  const checkpoints = [
-    '津田沼キャンパス出発',
-    '歩道橋下',
-    '富士そば前',
-    '第1休憩所出発',
-    'ベイシア佐倉店前',
-    '第2休憩所到着',
-    'Sun Lucky周辺',
-    '京成成田駅東口ロータリー周辺',
-  ]
+const checkpoints = [
+  { id: 1, name: '津田沼キャンパス出発' },
+  { id: 2, name: '歩道橋下' },
+  { id: 3, name: '富士そば前' },
+  { id: 4, name: '第1休憩所出発' },
+  { id: 5, name: 'ベイシア佐倉店前' },
+  { id: 6, name: '第2休憩所到着' },
+  { id: 7, name: 'Sun Lucky周辺' },
+  { id: 8, name: '京成成田駅東口ロータリー周辺' },
+]
 
+export default function Pagee() {
   return (
     <main
       style={{
         minHeight: '100vh',
-        background: '#0b1220',
-        color: '#e8eefc',
-        padding: '24px 16px 96px',
+        background: '#0f172a',
+        color: '#e5e7eb',
+        padding: '24px 16px 80px',
         fontFamily:
-          '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Yu Gothic UI",sans-serif',
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif',
       }}
     >
-      <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <div
+      <div
+        style={{
+          maxWidth: '960px',
+          margin: '0 auto',
+        }}
+      >
+        <section
           style={{
-            marginBottom: 16,
-            padding: 20,
-            borderRadius: 20,
             background: '#111827',
-            border: '1px solid #243042',
+            border: '1px solid #1f2937',
+            borderRadius: '20px',
+            padding: '24px',
+            marginBottom: '24px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
           }}
         >
-          <div style={{ fontSize: 12, color: '#9fb0cc', marginBottom: 8 }}>
-            Next.jsプレビュー版
-          </div>
-          <h1 style={{ margin: 0, fontSize: 28, lineHeight: 1.4 }}>
+          <p
+            style={{
+              margin: '0 0 8px 0',
+              fontSize: '13px',
+              color: '#9ca3af',
+            }}
+          >
+            Next.js プレビュー版
+          </p>
+
+          <h1
+            style={{
+              margin: '0 0 12px 0',
+              fontSize: '36px',
+              lineHeight: 1.3,
+              fontWeight: 800,
+            }}
+          >
             成田山詣行脚 進行管理アプリ
           </h1>
-          <p style={{ color: '#9fb0cc', marginTop: 10, lineHeight: 1.7 }}>
+
+          <p
+            style={{
+              margin: '0 0 20px 0',
+              fontSize: '16px',
+              color: '#cbd5e1',
+              lineHeight: 1.7,
+            }}
+          >
             今の公開版を壊さずに、画面を1つずつ Next.js 化していくための確認用ページです。
           </p>
 
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap',
+            }}
+          >
             <Link
               href="/narita.html"
               style={{
                 display: 'inline-block',
-                padding: '12px 16px',
-                borderRadius: 14,
-                background: '#243042',
-                color: '#fff',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                background: '#374151',
+                color: '#ffffff',
                 textDecoration: 'none',
                 fontWeight: 700,
               }}
@@ -61,87 +95,138 @@ export default function NextPreviewHome() {
               現在のHTML版を開く
             </Link>
 
-            <Link
-              href="/next-preview/checkpoints"
+            <a
+              href="#checkpoint-list"
               style={{
                 display: 'inline-block',
-                padding: '12px 16px',
-                borderRadius: 14,
+                padding: '12px 18px',
+                borderRadius: '12px',
                 background: '#2563eb',
-                color: '#fff',
+                color: '#ffffff',
                 textDecoration: 'none',
                 fontWeight: 700,
               }}
             >
               Next.js版チェックポイント一覧へ
-            </Link>
+            </a>
           </div>
-        </div>
+        </section>
 
-        <div
+        <section
           style={{
-            marginBottom: 16,
-            padding: 20,
-            borderRadius: 20,
             background: '#111827',
-            border: '1px solid #243042',
+            border: '1px solid #1f2937',
+            borderRadius: '20px',
+            padding: '24px',
+            marginBottom: '24px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
           }}
         >
-          <h2 style={{ marginTop: 0, fontSize: 20 }}>このページで確認すること</h2>
-          <ul style={{ color: '#c8d4ea', lineHeight: 1.9, paddingLeft: 20 }}>
+          <h2
+            style={{
+              margin: '0 0 16px 0',
+              fontSize: '24px',
+              fontWeight: 700,
+            }}
+          >
+            このページで確認すること
+          </h2>
+
+          <ul
+            style={{
+              margin: 0,
+              paddingLeft: '20px',
+              color: '#cbd5e1',
+              lineHeight: 1.9,
+              fontSize: '16px',
+            }}
+          >
             <li>Next.js 側の新しい画面が公開URLで見えるか</li>
             <li>今の HTML 版を壊さずに共存できるか</li>
             <li>今後の画面分割の土台になるか</li>
           </ul>
-        </div>
+        </section>
 
-        <div
+        <section
+          id="checkpoint-list"
           style={{
-            padding: 20,
-            borderRadius: 20,
             background: '#111827',
-            border: '1px solid #243042',
+            border: '1px solid #1f2937',
+            borderRadius: '20px',
+            padding: '24px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+            scrollMarginTop: '24px',
           }}
         >
-          <h2 style={{ marginTop: 0, fontSize: 20 }}>チェックポイント一覧（仮）</h2>
+          <h2
+            style={{
+              margin: '0 0 20px 0',
+              fontSize: '28px',
+              fontWeight: 800,
+            }}
+          >
+            チェックポイント一覧（仮）
+          </h2>
 
-          <div style={{ display: 'grid', gap: 12 }}>
-            {checkpoints.map((name, index) => (
+          <div
+            style={{
+              display: 'grid',
+              gap: '16px',
+            }}
+          >
+            {checkpoints.map((checkpoint) => (
               <div
-                key={name}
+                key={checkpoint.id}
                 style={{
-                  padding: 16,
-                  borderRadius: 16,
-                  background: '#172033',
-                  border: '1px solid #243042',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '18px',
+                  padding: '20px',
                 }}
               >
-                <div style={{ fontSize: 12, color: '#9fb0cc', marginBottom: 6 }}>
-                  チェックポイント {index + 1}
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>{name}</div>
-                <div style={{ marginTop: 10 }}>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '6px 10px',
-                      borderRadius: 999,
-                      background: '#1d2840',
-                      color: '#cfe0ff',
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    詳細ページは次ステップで作成
-                  </span>
-                </div>
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    fontSize: '13px',
+                    color: '#94a3b8',
+                  }}
+                >
+                  チェックポイント {checkpoint.id}
+                </p>
+
+                <h3
+                  style={{
+                    margin: '0 0 14px 0',
+                    fontSize: '28px',
+                    fontWeight: 800,
+                    color: '#f8fafc',
+                  }}
+                >
+                  {checkpoint.name}
+                </h3>
+
+                <button
+                  type="button"
+                  style={{
+                    border: 'none',
+                    background: '#334155',
+                    color: '#ffffff',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  詳細ページは次ステップで作成
+                </button>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </main>
   )
 }
+
 
 
