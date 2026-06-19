@@ -244,20 +244,20 @@ export default function Pagee() {
                   {checkpoint.note}
                 </p>
 
-                <button
-                  type="button"
-                  style={{
-                    border: 'none',
-                    background: '#334155',
-                    color: '#ffffff',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                <Link
+                href={`/next-preview/checkpoints/${checkpoint.id}`}
+                style={{
+                display: 'inline-block',
+                background: '#334155',
+                color: '#ffffff',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                }}
                 >
-                  詳細ページは次ステップで作成
-                </button>
+                詳細を見る
+                </Link>
               </div>
             ))}
           </div>

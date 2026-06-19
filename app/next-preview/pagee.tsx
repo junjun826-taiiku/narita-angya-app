@@ -95,21 +95,21 @@ export default function Pagee() {
               現在のHTML版を開く
             </Link>
 
-            <a
-              href="#checkpoint-list"
-              style={{
-                display: 'inline-block',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                background: '#2563eb',
-                color: '#ffffff',
-                textDecoration: 'none',
-                fontWeight: 700,
-              }}
-            >
-              Next.js版チェックポイント一覧へ
-            </a>
-          </div>
+            <Link
+             href="/next-preview/checkpoints"
+             style={{
+             display: 'inline-block',
+             padding: '12px 18px',
+             borderRadius: '12px',
+             background: '#2563eb',
+             color: '#ffffff',
+             textDecoration: 'none',
+             fontWeight: 700,
+            }}
+             >
+          Next.js版チェックポイント一覧へ
+          </Link>
+         </div>
         </section>
 
         <section
