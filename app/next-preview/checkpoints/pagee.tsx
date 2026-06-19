@@ -87,11 +87,8 @@ export default function Pagee() {
       setMessage('')
 
       const { data, error } = await supabase
-        .from('checkpoint_records')
-        .select(
-          'checkpoint_id, actual_time, status, memo, updated_by, updated_at'
-        )
-        .order('updated_at', { ascending: false })
+        .from('checkpoint_latest')
+        .select('checkpoint_id, actual_time, status, memo, updated_by, updated_at')
 
       if (error) {
         setMessage(`読込エラー: ${error.message}`)
@@ -102,9 +99,7 @@ export default function Pagee() {
       const map: Record<string, LatestRecord> = {}
 
       for (const row of data ?? []) {
-        if (!map[row.checkpoint_id]) {
-          map[row.checkpoint_id] = row
-        }
+        map[row.checkpoint_id] = row
       }
 
       setLatestMap(map)
@@ -170,7 +165,7 @@ export default function Pagee() {
               lineHeight: 1.7,
             }}
           >
-            HTML版を壊さずに、チェックポイント一覧だけを Next.js 側へ切り出した確認ページです。
+            最新保存データを反映したチェックポイント一覧です。
           </p>
 
           <div
@@ -418,4 +413,5 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
 

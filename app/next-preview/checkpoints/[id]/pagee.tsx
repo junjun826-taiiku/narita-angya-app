@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { supabase } from '../../../../lib/supabase/client'
 
 type PageeProps = {
@@ -106,11 +106,10 @@ export default function Pagee({ id }: PageeProps) {
       setMessage('')
 
       const { data, error } = await supabase
-        .from('checkpoint_records')
+        .from('checkpoint_latest')
         .select('actual_time, status, memo, updated_by, updated_at')
         .eq('checkpoint_id', id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
+        .maybeSingle()
 
       if (error) {
         setMessage(`読込エラー: ${error.message}`)
@@ -118,14 +117,12 @@ export default function Pagee({ id }: PageeProps) {
         return
       }
 
-      const latest = data?.[0]
-
-      if (latest) {
-        setActualTime(latest.actual_time ?? '')
-        setStatus(latest.status ?? '未確認')
-        setMemo(latest.memo ?? '')
-        setUpdatedBy(latest.updated_by ?? '行脚担当')
-        setLastSavedAt(formatDate(latest.updated_at))
+      if (data) {
+        setActualTime(data.actual_time ?? '')
+        setStatus(data.status ?? '未確認')
+        setMemo(data.memo ?? '')
+        setUpdatedBy(data.updated_by ?? '行脚担当')
+        setLastSavedAt(formatDate(data.updated_at))
       } else {
         setActualTime('')
         setStatus('未確認')
@@ -146,20 +143,34 @@ export default function Pagee({ id }: PageeProps) {
     setSaving(true)
     setMessage('')
 
-    const payload = {
+    const now = new Date().toISOString()
+
+    const commonPayload = {
       checkpoint_id: checkpoint.id,
       checkpoint_name: checkpoint.name,
       actual_time: actualTime || null,
       status,
       memo: memo || null,
       updated_by: updatedBy || '未設定',
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     }
 
-    const { error } = await supabase.from('checkpoint_records').insert([payload])
+    const { error: historyError } = await supabase
+      .from('checkpoint_records')
+      .insert([commonPayload])
 
-    if (error) {
-      setMessage(`保存エラー: ${error.message}`)
+    if (historyError) {
+      setMessage(`履歴保存エラー: ${historyError.message}`)
+      setSaving(false)
+      return
+    }
+
+    const { error: latestError } = await supabase
+      .from('checkpoint_latest')
+      .upsert([commonPayload], { onConflict: 'checkpoint_id' })
+
+    if (latestError) {
+      setMessage(`最新値保存エラー: ${latestError.message}`)
       setSaving(false)
       return
     }
@@ -171,43 +182,15 @@ export default function Pagee({ id }: PageeProps) {
 
   if (!checkpoint) {
     return (
-      <main
-        style={{
-          minHeight: '100vh',
-          background: '#0f172a',
-          color: '#e5e7eb',
-          padding: '24px 16px 80px',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif',
-        }}
-      >
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <section
-            style={{
-              background: '#111827',
-              border: '1px solid #1f2937',
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            }}
-          >
+      <main style={pageStyle}>
+        <div style={containerStyle}>
+          <section style={cardStyle}>
             <h1 style={{ margin: '0 0 12px 0', fontSize: '32px', fontWeight: 800 }}>
               該当するチェックポイントが見つかりません
             </h1>
 
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link
-                href="/next-preview/checkpoints"
-                style={{
-                  display: 'inline-block',
-                  padding: '12px 18px',
-                  borderRadius: '12px',
-                  background: '#2563eb',
-                  color: '#ffffff',
-                  textDecoration: 'none',
-                  fontWeight: 700,
-                }}
-              >
+              <Link href="/next-preview/checkpoints" style={primaryLinkStyle}>
                 一覧へ戻る
               </Link>
             </div>
@@ -225,41 +208,10 @@ export default function Pagee({ id }: PageeProps) {
       : '#ef4444'
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: '#0f172a',
-        color: '#e5e7eb',
-        padding: '24px 16px 80px',
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '960px',
-          margin: '0 auto',
-        }}
-      >
-        <section
-          style={{
-            background: '#111827',
-            border: '1px solid #1f2937',
-            borderRadius: '20px',
-            padding: '24px',
-            marginBottom: '24px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-          }}
-        >
-          <p
-            style={{
-              margin: '0 0 8px 0',
-              fontSize: '13px',
-              color: '#9ca3af',
-            }}
-          >
-            Next.js プレビュー版 / チェックポイント詳細
-          </p>
+    <main style={pageStyle}>
+      <div style={containerStyle}>
+        <section style={{ ...cardStyle, marginBottom: '24px' }}>
+          <p style={smallMutedStyle}>Next.js プレビュー版 / チェックポイント詳細</p>
 
           <h1
             style={{
@@ -283,69 +235,20 @@ export default function Pagee({ id }: PageeProps) {
             この画面で実績時刻・状態・メモを入力して保存できます。
           </p>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: '12px',
-              flexWrap: 'wrap',
-            }}
-          >
-            <Link
-              href="/next-preview/checkpoints"
-              style={{
-                display: 'inline-block',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                background: '#374151',
-                color: '#ffffff',
-                textDecoration: 'none',
-                fontWeight: 700,
-              }}
-            >
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link href="/next-preview/checkpoints" style={secondaryLinkStyle}>
               一覧へ戻る
             </Link>
 
-            <Link
-              href="/next-preview"
-              style={{
-                display: 'inline-block',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                background: '#1d4ed8',
-                color: '#ffffff',
-                textDecoration: 'none',
-                fontWeight: 700,
-              }}
-            >
+            <Link href="/next-preview" style={blueLinkStyle}>
               Next.jsトップへ戻る
             </Link>
           </div>
         </section>
 
-        <section
-          style={{
-            display: 'grid',
-            gap: '16px',
-          }}
-        >
-          <div
-            style={{
-              background: '#111827',
-              border: '1px solid #1f2937',
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            }}
-          >
-            <h2
-              style={{
-                margin: '0 0 16px 0',
-                fontSize: '24px',
-                fontWeight: 800,
-              }}
-            >
-              基本情報
-            </h2>
+        <section style={{ display: 'grid', gap: '16px' }}>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>基本情報</h2>
 
             <div style={{ display: 'grid', gap: '12px' }}>
               <InfoRow label="チェックポイントID" value={checkpoint.id} />
@@ -356,24 +259,8 @@ export default function Pagee({ id }: PageeProps) {
             </div>
           </div>
 
-          <div
-            style={{
-              background: '#111827',
-              border: '1px solid #1f2937',
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            }}
-          >
-            <h2
-              style={{
-                margin: '0 0 16px 0',
-                fontSize: '24px',
-                fontWeight: 800,
-              }}
-            >
-              保存フォーム
-            </h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>保存フォーム</h2>
 
             {loading ? (
               <p style={{ margin: 0, color: '#cbd5e1' }}>保存済みデータを読み込み中です...</p>
@@ -424,18 +311,7 @@ export default function Pagee({ id }: PageeProps) {
                   />
                 </Field>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    padding: '14px 16px',
-                    background: '#1e293b',
-                    borderRadius: '12px',
-                    border: '1px solid #334155',
-                    flexWrap: 'wrap',
-                  }}
-                >
+                <div style={statusBoxStyle}>
                   <span style={{ color: '#94a3b8', fontWeight: 600 }}>現在の状態</span>
                   <span
                     style={{
@@ -497,24 +373,8 @@ export default function Pagee({ id }: PageeProps) {
             )}
           </div>
 
-          <div
-            style={{
-              background: '#111827',
-              border: '1px solid #1f2937',
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            }}
-          >
-            <h2
-              style={{
-                margin: '0 0 16px 0',
-                fontSize: '24px',
-                fontWeight: 800,
-              }}
-            >
-              詳細説明
-            </h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>詳細説明</h2>
 
             <p
               style={{
@@ -535,18 +395,7 @@ export default function Pagee({ id }: PageeProps) {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        gap: '12px',
-        padding: '14px 16px',
-        background: '#1e293b',
-        borderRadius: '12px',
-        border: '1px solid #334155',
-        flexWrap: 'wrap',
-      }}
-    >
+    <div style={infoRowStyle}>
       <span style={{ color: '#94a3b8', fontWeight: 600 }}>{label}</span>
       <span style={{ color: '#f8fafc', fontWeight: 700 }}>{value}</span>
     </div>
@@ -558,7 +407,7 @@ function Field({
   children,
 }: {
   label: string
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <label
@@ -573,7 +422,29 @@ function Field({
   )
 }
 
-const inputStyle: React.CSSProperties = {
+const pageStyle: CSSProperties = {
+  minHeight: '100vh',
+  background: '#0f172a',
+  color: '#e5e7eb',
+  padding: '24px 16px 80px',
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif',
+}
+
+const containerStyle: CSSProperties = {
+  maxWidth: '960px',
+  margin: '0 auto',
+}
+
+const cardStyle: CSSProperties = {
+  background: '#111827',
+  border: '1px solid #1f2937',
+  borderRadius: '20px',
+  padding: '24px',
+  boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+}
+
+const inputStyle: CSSProperties = {
   width: '100%',
   background: '#0f172a',
   color: '#f8fafc',
@@ -583,4 +454,69 @@ const inputStyle: React.CSSProperties = {
   fontSize: '16px',
   outline: 'none',
 }
+
+const infoRowStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '12px',
+  padding: '14px 16px',
+  background: '#1e293b',
+  borderRadius: '12px',
+  border: '1px solid #334155',
+  flexWrap: 'wrap',
+}
+
+const statusBoxStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '12px',
+  padding: '14px 16px',
+  background: '#1e293b',
+  borderRadius: '12px',
+  border: '1px solid #334155',
+  flexWrap: 'wrap',
+}
+
+const primaryLinkStyle: CSSProperties = {
+  display: 'inline-block',
+  padding: '12px 18px',
+  borderRadius: '12px',
+  background: '#2563eb',
+  color: '#ffffff',
+  textDecoration: 'none',
+  fontWeight: 700,
+}
+
+const secondaryLinkStyle: CSSProperties = {
+  display: 'inline-block',
+  padding: '12px 18px',
+  borderRadius: '12px',
+  background: '#374151',
+  color: '#ffffff',
+  textDecoration: 'none',
+  fontWeight: 700,
+}
+
+const blueLinkStyle: CSSProperties = {
+  display: 'inline-block',
+  padding: '12px 18px',
+  borderRadius: '12px',
+  background: '#1d4ed8',
+  color: '#ffffff',
+  textDecoration: 'none',
+  fontWeight: 700,
+}
+
+const sectionTitleStyle: CSSProperties = {
+  margin: '0 0 16px 0',
+  fontSize: '24px',
+  fontWeight: 800,
+}
+
+const smallMutedStyle: CSSProperties = {
+  margin: '0 0 8px 0',
+  fontSize: '13px',
+  color: '#9ca3af',
+}
+
 
