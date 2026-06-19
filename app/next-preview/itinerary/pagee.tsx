@@ -1,106 +1,144 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../../lib/supabase/client'
 
 const itinerary = [
   {
     id: '1',
+    checkpointId: '1',
     time: '19:30',
     title: '津田沼キャンパス 出発',
     type: '出発',
     note: '行脚開始。全班の出発状況を確認する。',
-    status: '予定通り',
   },
   {
     id: '2',
+    checkpointId: '2',
     time: '20:10',
     title: '歩道橋下 通過確認',
     type: '通過',
     note: '序盤の安全確認ポイント。',
-    status: '確認待ち',
   },
   {
     id: '3',
+    checkpointId: '3',
     time: '20:40',
     title: '富士そば前 通過確認',
     type: '通過',
     note: '班ごとの通過状況を確認。',
-    status: '確認待ち',
   },
   {
     id: '4',
-    time: '21:30',
-    title: '第1休憩所 到着',
-    type: '休憩',
-    note: '休憩前の到着確認。',
-    status: '確認待ち',
-  },
-  {
-    id: '5',
+    checkpointId: '4',
     time: '22:00',
     title: '第1休憩所 出発',
     type: '再出発',
     note: '再出発時刻を確認。',
-    status: '確認待ち',
   },
   {
-    id: '6',
+    id: '5',
+    checkpointId: '5',
     time: '00:10',
     title: 'ベイシア佐倉店前 通過',
     type: '通過',
     note: '中盤の進行確認地点。',
-    status: '確認待ち',
   },
   {
-    id: '7',
+    id: '6',
+    checkpointId: '6',
     time: '02:00',
     title: '第2休憩所 到着',
     type: '休憩',
     note: '後半戦前の到着確認。',
-    status: '確認待ち',
   },
   {
-    id: '8',
+    id: '7',
+    checkpointId: '7',
     time: '04:40',
     title: 'Sun Lucky周辺 通過',
     type: '終盤',
     note: '成田市内進入後の確認ポイント。',
-    status: '確認待ち',
   },
   {
-    id: '9',
+    id: '8',
+    checkpointId: '8',
     time: '05:30',
     title: '京成成田駅東口ロータリー周辺',
     type: '終盤',
     note: 'ゴール直前の最終確認地点。',
-    status: '確認待ち',
-  },
-  {
-    id: '10',
-    time: '06:15',
-    title: '成田山新勝寺 到着',
-    type: 'ゴール',
-    note: '行脚終了。',
-    status: '確認待ち',
   },
 ]
 
-function getStatusColor(status: string) {
-  if (status === '予定通り') return '#16a34a'
-  if (status === '確認待ち') return '#f59e0b'
-  return '#ef4444'
+type LatestRecord = {
+  checkpoint_id: string
+  checkpoint_name?: string | null
+  actual_time: string | null
+  status: string | null
+  memo: string | null
+  updated_by: string | null
+  updated_at: string | null
+}
+
+function getStatusColor(status?: string | null) {
+  if (status === '正常') return '#16a34a'
+  if (status === '未確認') return '#f59e0b'
+  if (status === '遅れ') return '#ef4444'
+  return '#475569'
 }
 
 function getTypeColor(type: string) {
   if (type === '出発') return '#2563eb'
   if (type === '休憩') return '#7c3aed'
   if (type === '再出発') return '#0891b2'
-  if (type === 'ゴール') return '#dc2626'
   if (type === '終盤') return '#ea580c'
   return '#334155'
 }
 
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return '未更新'
+  return new Date(value).toLocaleString('ja-JP')
+}
+
 export default function Pagee() {
+  const [latestMap, setLatestMap] = useState<Record<string, LatestRecord>>({})
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    const fetchLatestRecords = async () => {
+      setLoading(true)
+      setMessage('')
+
+      const { data, error } = await supabase
+        .from('checkpoint_records')
+        .select(
+          'checkpoint_id, checkpoint_name, actual_time, status, memo, updated_by, updated_at'
+        )
+        .order('updated_at', { ascending: false })
+
+      if (error) {
+        setMessage(`読込エラー: ${error.message}`)
+        setLoading(false)
+        return
+      }
+
+      const map: Record<string, LatestRecord> = {}
+
+      for (const row of data ?? []) {
+        if (!map[row.checkpoint_id]) {
+          map[row.checkpoint_id] = row
+        }
+      }
+
+      setLatestMap(map)
+      setLoading(false)
+    }
+
+    fetchLatestRecords()
+  }, [])
+
   return (
     <main
       style={{
@@ -157,7 +195,7 @@ export default function Pagee() {
               lineHeight: 1.7,
             }}
           >
-            HTML版を壊さずに、行程表だけを Next.js 側へ切り出した確認ページです。
+            チェックポイントごとの最新保存データを反映した行程表です。
           </p>
 
           <div
@@ -243,11 +281,29 @@ export default function Pagee() {
               fontSize: '16px',
             }}
           >
-            <li>全体の時系列を見やすく整理する</li>
-            <li>チェックポイント一覧とは別に行動順で確認できるようにする</li>
-            <li>後で実績時刻や遅れ表示を追加する土台にする</li>
+            <li>行脚全体を時系列で見やすく確認する</li>
+            <li>保存済みの実績時刻・状態を一目で把握する</li>
+            <li>後で全班表示や遅れ計算を追加する土台にする</li>
           </ul>
         </section>
+
+        {loading ? (
+          <p style={{ margin: '0 0 16px 0', color: '#cbd5e1' }}>
+            保存済みデータを読み込み中です...
+          </p>
+        ) : null}
+
+        {message ? (
+          <p
+            style={{
+              margin: '0 0 16px 0',
+              color: '#fca5a5',
+              fontWeight: 700,
+            }}
+          >
+            {message}
+          </p>
+        ) : null}
 
         <section
           style={{
@@ -255,98 +311,105 @@ export default function Pagee() {
             gap: '16px',
           }}
         >
-          {itinerary.map((item, index) => (
-            <div
-              key={item.id}
-              style={{
-                background: '#111827',
-                border: '1px solid #1f2937',
-                borderRadius: '20px',
-                padding: '20px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-              }}
-            >
+          {itinerary.map((item, index) => {
+            const latest = latestMap[item.checkpointId]
+
+            return (
               <div
+                key={item.id}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: '16px',
-                  flexWrap: 'wrap',
-                  marginBottom: '12px',
+                  background: '#111827',
+                  border: '1px solid #1f2937',
+                  borderRadius: '20px',
+                  padding: '20px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
                 }}
               >
-                <div>
-                  <p
-                    style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '13px',
-                      color: '#94a3b8',
-                    }}
-                  >
-                    行程 {index + 1}
-                  </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: '16px',
+                    flexWrap: 'wrap',
+                    marginBottom: '12px',
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 6px 0',
+                        fontSize: '13px',
+                        color: '#94a3b8',
+                      }}
+                    >
+                      行程 {index + 1}
+                    </p>
 
-                  <h3
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: '28px',
+                        fontWeight: 800,
+                        color: '#f8fafc',
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                  </div>
+
+                  <div
                     style={{
-                      margin: 0,
-                      fontSize: '28px',
-                      fontWeight: 800,
-                      color: '#f8fafc',
+                      display: 'flex',
+                      gap: '8px',
+                      flexWrap: 'wrap',
                     }}
                   >
-                    {item.title}
-                  </h3>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        background: getTypeColor(item.type),
+                        color: '#ffffff',
+                        padding: '6px 10px',
+                        borderRadius: '999px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {item.type}
+                    </span>
+
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        background: getStatusColor(latest?.status),
+                        color: '#ffffff',
+                        padding: '6px 10px',
+                        borderRadius: '999px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {latest?.status || '未確認'}
+                    </span>
+                  </div>
                 </div>
 
                 <div
                   style={{
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap',
+                    display: 'grid',
+                    gap: '12px',
                   }}
                 >
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      background: getTypeColor(item.type),
-                      color: '#ffffff',
-                      padding: '6px 10px',
-                      borderRadius: '999px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {item.type}
-                  </span>
-
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      background: getStatusColor(item.status),
-                      color: '#ffffff',
-                      padding: '6px 10px',
-                      borderRadius: '999px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {item.status}
-                  </span>
+                  <InfoRow label="予定時刻" value={item.time} />
+                  <InfoRow label="実績時刻" value={latest?.actual_time || '未入力'} />
+                  <InfoRow label="更新者" value={latest?.updated_by || '未設定'} />
+                  <InfoRow label="最終更新" value={formatDateTime(latest?.updated_at)} />
+                  <InfoRow label="メモ" value={latest?.memo || item.note} />
                 </div>
               </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gap: '12px',
-                }}
-              >
-                <InfoRow label="予定時刻" value={item.time} />
-                <InfoRow label="メモ" value={item.note} />
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </section>
       </div>
     </main>
@@ -372,3 +435,4 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
