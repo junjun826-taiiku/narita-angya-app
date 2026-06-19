@@ -123,6 +123,21 @@ export default function Pagee() {
 >
   Next.js版行程表へ
 </Link>
+<Link
+  href="/next-preview/history"
+  style={{
+    display: 'inline-block',
+    padding: '12px 18px',
+    borderRadius: '12px',
+    background: '#7c3aed',
+    color: '#ffffff',
+    textDecoration: 'none',
+    fontWeight: 700,
+  }}
+>
+  Next.js版履歴へ
+</Link>
+
         </div>
         </section>
 
