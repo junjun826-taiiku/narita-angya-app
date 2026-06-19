@@ -1,78 +1,62 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../../lib/supabase/client'
 
-const historyItems = [
-  {
-    id: '1',
-    updatedAt: '2026-05-23 19:32',
-    checkpoint: '津田沼キャンパス出発',
-    team: '1班',
-    action: '出発確認',
-    value: '19:30',
-    user: '行脚担当',
-    note: '予定通り出発',
-  },
-  {
-    id: '2',
-    updatedAt: '2026-05-23 20:12',
-    checkpoint: '歩道橋下',
-    team: '2班',
-    action: '通過確認',
-    value: '20:11',
-    user: 'ポイントマン',
-    note: '安全確認済み',
-  },
-  {
-    id: '3',
-    updatedAt: '2026-05-23 20:43',
-    checkpoint: '富士そば前',
-    team: '3班',
-    action: '通過確認',
-    value: '20:42',
-    user: 'ポイントマン',
-    note: '大きな遅れなし',
-  },
-  {
-    id: '4',
-    updatedAt: '2026-05-23 22:01',
-    checkpoint: '第1休憩所出発',
-    team: '全班',
-    action: '再出発確認',
-    value: '22:00',
-    user: '行脚担当',
-    note: '全体再出発',
-  },
-  {
-    id: '5',
-    updatedAt: '2026-05-24 00:15',
-    checkpoint: 'ベイシア佐倉店前',
-    team: '5班',
-    action: '進行確認',
-    value: '00:13',
-    user: 'ポイントマン',
-    note: 'やや前倒し',
-  },
-  {
-    id: '6',
-    updatedAt: '2026-05-24 02:05',
-    checkpoint: '第2休憩所到着',
-    team: '全班',
-    action: '到着確認',
-    value: '02:03',
-    user: '行脚担当',
-    note: '休憩所到着確認',
-  },
-]
+type HistoryRecord = {
+  id?: string
+  checkpoint_id: string
+  checkpoint_name: string | null
+  actual_time: string | null
+  status: string | null
+  memo: string | null
+  updated_by: string | null
+  updated_at: string | null
+}
 
-function getActionColor(action: string) {
-  if (action.includes('出発')) return '#2563eb'
-  if (action.includes('通過')) return '#16a34a'
-  if (action.includes('到着')) return '#7c3aed'
-  return '#f59e0b'
+function getStatusColor(status?: string | null) {
+  if (status === '正常') return '#16a34a'
+  if (status === '未確認') return '#f59e0b'
+  if (status === '遅れ') return '#ef4444'
+  return '#475569'
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return '未更新'
+  return new Date(value).toLocaleString('ja-JP')
 }
 
 export default function Pagee() {
+  const [records, setRecords] = useState<HistoryRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setLoading(true)
+      setMessage('')
+
+      const { data, error } = await supabase
+        .from('checkpoint_records')
+        .select(
+          'id, checkpoint_id, checkpoint_name, actual_time, status, memo, updated_by, updated_at'
+        )
+        .order('updated_at', { ascending: false })
+
+      if (error) {
+        setMessage(`読込エラー: ${error.message}`)
+        setLoading(false)
+        return
+      }
+
+      setRecords((data ?? []) as HistoryRecord[])
+      setLoading(false)
+    }
+
+    fetchHistory()
+  }, [])
+
   return (
     <main
       style={{
@@ -129,7 +113,7 @@ export default function Pagee() {
               lineHeight: 1.7,
             }}
           >
-            HTML版を壊さずに、履歴画面だけを Next.js 側へ切り出した確認ページです。
+            Supabase に保存されたチェックポイント更新履歴を、新しい順に表示するページです。
           </p>
 
           <div
@@ -230,11 +214,60 @@ export default function Pagee() {
               fontSize: '16px',
             }}
           >
-            <li>誰がいつ更新したかを確認する</li>
-            <li>通過・到着・出発などの変更履歴を時系列で見る</li>
-            <li>後で Supabase の更新ログ表示に置き換える土台にする</li>
+            <li>誰がいつ何を更新したかを時系列で確認する</li>
+            <li>保存された実績時刻・状態・メモの変更を追えるようにする</li>
+            <li>後で本格的な監査ログ画面へ広げる土台にする</li>
           </ul>
         </section>
+
+        {loading ? (
+          <p style={{ margin: '0 0 16px 0', color: '#cbd5e1' }}>
+            履歴データを読み込み中です...
+          </p>
+        ) : null}
+
+        {message ? (
+          <p
+            style={{
+              margin: '0 0 16px 0',
+              color: '#fca5a5',
+              fontWeight: 700,
+            }}
+          >
+            {message}
+          </p>
+        ) : null}
+
+        {!loading && !message && records.length === 0 ? (
+          <section
+            style={{
+              background: '#111827',
+              border: '1px solid #1f2937',
+              borderRadius: '20px',
+              padding: '24px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+            }}
+          >
+            <h2
+              style={{
+                margin: '0 0 12px 0',
+                fontSize: '24px',
+                fontWeight: 800,
+              }}
+            >
+              まだ履歴がありません
+            </h2>
+            <p
+              style={{
+                margin: 0,
+                color: '#cbd5e1',
+                lineHeight: 1.8,
+              }}
+            >
+              まずはチェックポイント詳細画面で保存すると、ここに履歴が表示されます。
+            </p>
+          </section>
+        ) : null}
 
         <section
           style={{
@@ -242,9 +275,9 @@ export default function Pagee() {
             gap: '16px',
           }}
         >
-          {historyItems.map((item) => (
+          {records.map((item, index) => (
             <div
-              key={item.id}
+              key={`${item.checkpoint_id}-${item.updated_at ?? index}`}
               style={{
                 background: '#111827',
                 border: '1px solid #1f2937',
@@ -271,7 +304,7 @@ export default function Pagee() {
                       color: '#94a3b8',
                     }}
                   >
-                    更新時刻
+                    履歴 {index + 1}
                   </p>
 
                   <h3
@@ -282,14 +315,14 @@ export default function Pagee() {
                       color: '#f8fafc',
                     }}
                   >
-                    {item.updatedAt}
+                    {formatDateTime(item.updated_at)}
                   </h3>
                 </div>
 
                 <span
                   style={{
                     display: 'inline-block',
-                    background: getActionColor(item.action),
+                    background: getStatusColor(item.status),
                     color: '#ffffff',
                     padding: '6px 10px',
                     borderRadius: '999px',
@@ -297,7 +330,7 @@ export default function Pagee() {
                     fontWeight: 700,
                   }}
                 >
-                  {item.action}
+                  {item.status || '未確認'}
                 </span>
               </div>
 
@@ -307,11 +340,14 @@ export default function Pagee() {
                   gap: '12px',
                 }}
               >
-                <InfoRow label="チェックポイント" value={item.checkpoint} />
-                <InfoRow label="対象班" value={item.team} />
-                <InfoRow label="入力値" value={item.value} />
-                <InfoRow label="更新者" value={item.user} />
-                <InfoRow label="メモ" value={item.note} />
+                <InfoRow
+                  label="チェックポイント"
+                  value={item.checkpoint_name || `ID: ${item.checkpoint_id}`}
+                />
+                <InfoRow label="チェックポイントID" value={item.checkpoint_id} />
+                <InfoRow label="実績時刻" value={item.actual_time || '未入力'} />
+                <InfoRow label="更新者" value={item.updated_by || '未設定'} />
+                <InfoRow label="メモ" value={item.memo || 'なし'} />
               </div>
             </div>
           ))}
@@ -340,3 +376,4 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
